@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Habit Tower</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#f6f4ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Habit Tower">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--text:#222;--muted:#777;--line:#e2ded4;--accent:#3b6ef5;--cw:28px;--ch:23px;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181b;--card:#222428;--text:#eee;--muted:#9a9ca3;--line:#34363c;--accent:#7c9cff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181b;--card:#222428;--text:#eee;--muted:#9a9ca3;--line:#34363c;--accent:#7c9cff;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+main{max-width:460px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.4rem;margin:0 0 12px}
+.stats{display:flex;gap:10px;margin-bottom:14px}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.stat span{font-size:.75rem;color:var(--muted)}
+.banner{background:#c0392b;color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.banner button{background:#fff3;color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card h2{font-size:.95rem;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;border-radius:999px;overflow:hidden}
+.chip .add{border:0;padding:10px 14px;font-size:.95rem;font-weight:600;cursor:pointer}
+.chip .x{border:0;padding:10px 12px 10px 4px;background:transparent;opacity:.7;cursor:pointer;font-size:1rem}
+.empty{color:var(--muted);font-size:.9rem}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.95rem}
+form,.col{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+input[type=text]{font-size:1rem;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%}
+.sw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw button{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.sw button.on{border-color:var(--text)}
+.sw input[type=color]{width:34px;height:34px;padding:0;border:0;background:none;cursor:pointer}
+.go{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:11px;font-size:1rem;font-weight:600;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:11px 8px;font-size:.9rem;cursor:pointer}
+.btn.danger{color:#e74c3c}
+.tray{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 12px 10px;margin-bottom:14px;box-shadow:0 4px 14px #0002}
+.tlabel{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.titems{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-start;min-height:34px;max-height:32vh;overflow:auto}
+.titem{display:flex;flex-direction:column;align-items:center;width:52px;gap:2px}
+.cap{font-size:.62rem;color:var(--muted);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tiny{font-size:.8rem}
+.bh{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.bh .acts{display:flex;gap:6px}
+.bh h2{margin:0}
+.bh .btn{flex:none;padding:6px 10px}
+.bw{margin:0 auto}
+.bv{overflow-y:auto;overflow-x:hidden;border:1px solid var(--line);border-radius:6px}
+.board{position:relative;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:var(--cw) var(--ch)}
+.ground{height:6px;border-radius:3px;background:var(--muted)}
+.hl{position:absolute;display:none;width:var(--cw);height:var(--ch);outline:2px dashed var(--accent);background:#3b6ef533;pointer-events:none;z-index:1}
+.tile{width:var(--cw);height:var(--ch);flex:none;border-radius:3px;box-shadow:inset 0 -3px 0 #0003,inset 0 0 0 1px #0002;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.tile.board{position:absolute}
+.tile.tray{touch-action:none}
+.tile.lift{position:fixed!important;z-index:50;box-shadow:0 8px 18px #0006;transform:scale(1.15)!important;cursor:grabbing;pointer-events:none}
+.tile.fall{animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translate(var(--dx),520px) rotate(var(--dr));opacity:0}}
+.tile.drop{animation:drop .35s ease-out}
+@keyframes drop{from{transform:translateY(-30px) scale(.4);opacity:0}}
+textarea{font-size:.8rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;font-family:ui-monospace,monospace}
+.warn{background:#f1c40f33;border:1px solid #f1c40f;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.9rem}
+.note{font-size:.8rem;color:var(--muted);margin-top:6px}
+.ov{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;justify-content:center;z-index:100}
+.sheet{background:var(--card);width:100%;max-width:460px;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.sheet h3{margin:0;font-size:1rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>🧱 Habit Tower</h1>
+  <div id="banner"></div>
+  <div class="stats">
+    <div class="stat"><b id="h">0</b><span>blocks</span></div>
+    <div class="stat"><b id="d">0</b><span>active days</span></div>
+    <div class="stat"><b id="b">0</b><span>best total</span></div>
+  </div>
+  <div class="card">
+    <h2>Tap a habit to get a new block</h2>
+    <div class="chips" id="chips"></div>
+    <details>
+      <summary>+ New habit or block</summary>
+      <form id="f">
+        <input type="text" id="name" placeholder="e.g. 20 min walk" maxlength="30" autocomplete="off">
+        <div class="sw" id="sw"></div>
+        <div class="row">
+          <button class="btn" type="button" id="addb">+ Add block only</button>
+          <button class="go" type="submit" style="flex:1">Save as habit</button>
+        </div>
+      </form>
+    </details>
+  </div>
+  <div class="tray" id="tray"><div class="tlabel">Tray: drag blocks onto your tower</div><div class="titems" id="titems"></div></div>
+  <div class="card">
+    <div class="bh"><h2>Your tower <span class="tiny" id="ht" style="color:var(--muted);font-weight:400"></span></h2><div class="acts"><button class="btn" id="top">↑ Top</button><button class="btn" id="gnd">↓ Ground</button><button class="btn" id="gravity">Gravity: on</button></div></div>
+    <div class="bw" id="bw"><div class="bv" id="bv"><div class="board" id="board"><div class="hl" id="hl"></div></div><div class="ground"></div></div></div>
+  </div>
+  <div class="card"><details style="margin:0"><summary>Backup and restore</summary><div class="col"><textarea id="bk" rows="4" placeholder="Your backup text appears here. To restore, paste it here and tap Restore."></textarea><div class="row"><button class="btn" id="exp">Show backup</button><button class="btn" id="imp">Restore from text</button></div><div class="note" id="bkmsg"></div></div></details></div>
+  <p class="note">Drag new blocks from the tray to any spot on the board, side by side or stacked. Tap a block to rename, recolor, or delete it. The tower window scrolls up and down and holds up to 200 rows. On touch screens, press and hold a block on the board before dragging. Skip 3 days in a row and the tower crumbles. With gravity on, blocks fall until they land; turn it off to build overhangs.</p>
+</main>
+<script>
+var KEY="habit-tower-v1",COLS=12,cw=28,ch=23,R=200,MAXR=200,VIEW=16,needBottom=true;
+var COLORS=["#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e84393"];
+var S={habits:[],blocks:[],tray:[],best:0,crumbled:null,gravity:true};
+var color=COLORS[5];
+try{var raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw)}}catch(e){}
+S.habits=S.habits||[];S.blocks=S.blocks||[];S.tray=S.tray||[];if(S.gravity==null)S.gravity=true;
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+S.blocks.forEach(function(b,i){if(!b.id)b.id=uid();if(b.col==null){b.col=Math.floor(COLS/2);b.row=i}});
+S.tray.forEach(function(b){if(!b.id)b.id=uid()});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function dn(s){var p=s.split("-").map(Number);return Math.round(Date.UTC(p[0],p[1]-1,p[2])/864e5)}
+function ink(hex){var r=parseInt(hex.substr(1,2),16),g=parseInt(hex.substr(3,2),16),b=parseInt(hex.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)>160?"#222":"#fff"}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function $(id){return document.getElementById(id)}
+function mk(n,c){return {id:uid(),name:n,color:c,day:today()}}
+function allBlocks(){return S.blocks.concat(S.tray)}
+function bump(){var n=allBlocks().length;if(n>(S.best||0))S.best=n}
+function findBlock(id){
+  var i=S.blocks.findIndex(function(x){return x.id===id});
+  if(i>=0)return {b:S.blocks[i],list:S.blocks,where:"board"};
+  i=S.tray.findIndex(function(x){return x.id===id});
+  if(i>=0)return {b:S.tray[i],list:S.tray,where:"tray"};
+  return null;
+}
+
+function checkCrumble(){
+  var all=allBlocks();if(!all.length)return null;
+  var last=all.reduce(function(m,b){return b.day>m?b.day:m},"0000-00-00");
+  if(dn(today())-dn(last)>3){
+    var placed=S.blocks;
+    S.crumbled={count:all.length,days:new Set(all.map(function(b){return b.day})).size};
+    S.blocks=[];S.tray=[];save();return {placed:placed};
+  }
+  return null;
+}
+function missedDays(){
+  var all=allBlocks();if(!all.length)return 0;
+  var last=all.reduce(function(m,b){return b.day>m?b.day:m},"0000-00-00");
+  return Math.max(0,dn(today())-dn(last)-1);
+}
+function crumbleRun(o){needBottom=true;render();renderBoard(o.placed,"fall");setTimeout(function(){render()},2300)}
+
+function makeSw(box,cur,pick){
+  box.innerHTML="";
+  COLORS.forEach(function(col){
+    var b=document.createElement("button");b.type="button";b.style.background=col;b.setAttribute("aria-label","Color "+col);
+    if(col===cur)b.className="on";
+    b.onclick=function(){[].forEach.call(box.querySelectorAll("button"),function(x){x.className=""});b.className="on";pick(col)};
+    box.appendChild(b);
+  });
+  var ci=document.createElement("input");ci.type="color";ci.value=/^#[0-9a-f]{6}$/i.test(cur)?cur:"#3498db";ci.title="Custom color";
+  ci.oninput=function(){[].forEach.call(box.querySelectorAll("button"),function(x){x.className=""});pick(ci.value)};
+  box.appendChild(ci);
+}
+
+function measure(){
+  var bw=$("bw");bw.style.width="100%";
+  cw=Math.max(14,Math.floor(bw.clientWidth/COLS));ch=Math.round(cw*0.82);
+  bw.style.width=cw*COLS+"px";
+  document.documentElement.style.setProperty("--cw",cw+"px");
+  document.documentElement.style.setProperty("--ch",ch+"px");
+  $("bv").style.height=VIEW*ch+"px";
+}
+function tile(b,where,inert){
+  var el=document.createElement("div");
+  el.className="tile "+where;el.dataset.id=b.id;el.title=b.name;el.style.background=b.color;
+  if(!inert){
+    el.addEventListener("pointerdown",function(e){down(e,el,b.id,where)});
+    el.addEventListener("contextmenu",function(e){e.preventDefault()});
+  }
+  return el;
+}
+function rowsFor(list){return MAXR}
+function renderBoard(list,mode,from){
+  var bd=$("board");
+  [].slice.call(bd.querySelectorAll(".tile")).forEach(function(n){n.remove()});
+  R=rowsFor(list);bd.style.height=R*ch+"px";
+  list.forEach(function(b){
+    var el=tile(b,"board",mode==="fall");
+    el.style.left=b.col*cw+"px";el.style.top=(R-1-b.row)*ch+"px";
+    if(mode==="fall"){
+      el.classList.add("fall");
+      el.style.setProperty("--dx",(Math.random()*160-80)+"px");
+      el.style.setProperty("--dr",(Math.random()*120-60)+"deg");
+      el.style.animationDelay=(Math.random()*0.5)+"s";
+    }
+    bd.appendChild(el);
+    if(from&&from[b.id]!=null&&mode!=="fall"){
+      var dist=from[b.id]-b.row;
+      el.style.top=(R-1-from[b.id])*ch+"px";
+      void el.offsetHeight;
+      el.style.transition="top "+(0.12+0.07*Math.sqrt(dist))+"s cubic-bezier(.55,0,1,.45)";
+      el.style.top=(R-1-b.row)*ch+"px";
+    }
+  });
+}
+function renderTray(freshId){
+  var ti=$("titems");ti.innerHTML="";
+  if(!S.tray.length){ti.innerHTML='<span class="empty tiny">New blocks appear here. Drag them onto the tower.</span>';return}
+  S.tray.forEach(function(b){
+    var w=document.createElement("div");w.className="titem";
+    var t=tile(b,"tray");if(b.id===freshId)t.classList.add("drop");
+    var c=document.createElement("span");c.className="cap";c.textContent=b.name;
+    w.appendChild(t);w.appendChild(c);ti.appendChild(w);
+  });
+}
+function render(freshId){
+  measure();
+  var days=new Set(allBlocks().map(function(b){return b.day})).size;
+  $("h").textContent=allBlocks().length;$("d").textContent=days;$("b").textContent=S.best||0;
+  var c=$("chips");c.innerHTML="";
+  if(!S.habits.length)c.innerHTML='<span class="empty">No habits yet. Create one below.</span>';
+  S.habits.forEach(function(h){
+    var w=document.createElement("div");w.className="chip";w.style.background=h.color;w.style.color=ink(h.color);
+    w.innerHTML='<button class="add" style="background:none;color:inherit">'+esc(h.name)+'</button><button class="x" style="color:inherit" aria-label="Delete habit">×</button>';
+    w.children[0].onclick=function(){addToTray(mk(h.name,h.color))};
+    var x=w.children[1],armed=false;
+    x.onclick=function(){
+      if(!armed){armed=true;x.textContent="Delete?";x.style.opacity=1;x.style.fontSize=".8rem";
+        setTimeout(function(){armed=false;x.textContent="×";x.style.opacity="";x.style.fontSize=""},2500);return}
+      S.habits=S.habits.filter(function(y){return y.id!==h.id});save();render();
+    };
+    c.appendChild(w);
+  });
+  var bn=$("banner");bn.innerHTML="";
+  if(S.crumbled){
+    bn.innerHTML='<div class="banner"><span>💥 Your tower of '+S.crumbled.count+' blocks ('+S.crumbled.days+' active days) crumbled after 3 skipped days. Start again!</span><button>OK</button></div>';
+    bn.querySelector("button").onclick=function(){S.crumbled=null;save();render()};
+  }
+  var m=missedDays();
+  if(!S.crumbled&&m>=1)bn.innerHTML='<div class="warn">⚠ '+m+' skipped day'+(m>1?'s':'')+' so far. Add a block today, or the tower crumbles after 3 in a row.</div>';
+  var from=S.gravity?applyGravity():null;
+  $("gravity").textContent="Gravity: "+(S.gravity?"on":"off");
+  renderTray(freshId);
+  renderBoard(S.blocks,"",from);
+  if(from&&Object.keys(from).length)save();
+  var mx=-1;S.blocks.forEach(function(b){if(b.row>mx)mx=b.row});
+  $("ht").textContent="· height "+(mx+1)+"/"+MAXR;
+  if(needBottom){var bv=$("bv");bv.scrollTop=bv.scrollHeight;needBottom=false}
+}
+function addToTray(b){S.crumbled=null;S.tray.push(b);bump();save();render(b.id)}
+
+/* dragging (tray to board, board to board, board to tray) */
+var D=null;
+function down(e,el,id,where){
+  if(e.button>0||D)return;
+  D={el:el,id:id,where:where,x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,active:false,hold:(where==="board"&&e.pointerType!=="mouse")};
+  if(D.hold)D.timer=setTimeout(function(){if(D&&!D.active)start()},260);
+  window.addEventListener("pointermove",move);
+  window.addEventListener("pointerup",up);
+  window.addEventListener("pointercancel",up);
+}
+function unlisten(){window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up);window.removeEventListener("pointercancel",up)}
+function cancelDrag(){if(D){clearTimeout(D.timer);clearInterval(D.iv)}unlisten();D=null}
+function start(){
+  var r=D.el.getBoundingClientRect();
+  D.offX=D.cx-r.left;D.offY=D.cy-r.top;
+  D.el.classList.remove("drop");
+  D.el.classList.add("lift");D.el.style.left=r.left+"px";D.el.style.top=r.top+"px";
+  D.active=true;D.iv=setInterval(tick,16);
+  try{if(navigator.vibrate)navigator.vibrate(15)}catch(x){}
+  showHl();
+}
+function move(e){
+  if(!D)return;
+  D.cx=e.clientX;D.cy=e.clientY;
+  if(!D.active){
+    if(Math.abs(D.cx-D.x)+Math.abs(D.cy-D.y)>8){if(D.hold){cancelDrag();return}start()}
+    else return;
+  }
+  D.el.style.left=(D.cx-D.offX)+"px";D.el.style.top=(D.cy-D.offY)+"px";
+  showHl();
+}
+function target(d){
+  var r=$("board").getBoundingClientRect();
+  var tx=d.cx-d.offX+cw/2,ty=d.cy-d.offY+ch/2,v=$("bv").getBoundingClientRect();
+  if(tx<v.left||tx>v.right||ty<v.top||ty>v.bottom)return null;
+  var c=Math.floor((tx-r.left)/cw),rt=Math.floor((ty-r.top)/ch);
+  if(c<0||c>=COLS||rt<0||rt>=R)return null;
+  return {col:c,row:R-1-rt};
+}
+function overTray(d){
+  var t=$("tray").getBoundingClientRect();
+  return d.cx>=t.left&&d.cx<=t.right&&d.cy>=t.top&&d.cy<=t.bottom;
+}
+function showHl(){
+  var h=$("hl");if(!D||!D.active)return;
+  var t=overTray(D)?null:target(D);
+  if(!t){h.style.display="none";return}
+  var row=t.row;
+  if(S.gravity){
+    var occ=S.blocks.some(function(o){return o.id!==D.id&&o.col===t.col&&o.row===t.row});
+    if(!occ)row=S.blocks.filter(function(o){return o.id!==D.id&&o.col===t.col}).length;
+  }
+  h.style.display="block";h.style.left=t.col*cw+"px";h.style.top=(R-1-row)*ch+"px";
+}
+function tick(){
+  if(!D||!D.active)return;
+  var v=$("bv"),vr=v.getBoundingClientRect(),inV=D.cx>=vr.left&&D.cx<=vr.right&&D.cy>=vr.top&&D.cy<=vr.bottom;
+  var tb=$("tray").getBoundingClientRect().bottom;
+  if(inV&&D.cy<vr.top+34&&D.cy>=tb)v.scrollTop-=9;
+  else if(inV&&D.cy>vr.bottom-34)v.scrollTop+=9;
+  else if(D.cy>=tb&&D.cy<tb+28)window.scrollBy(0,-7);else if(D.cy>innerHeight-60)window.scrollBy(0,10);
+  showHl();
+}
+function nearestFree(c0,r0){
+  var best=null,bd=1e9;
+  for(var dr=-8;dr<=8;dr++)for(var dc=-8;dc<=8;dc++){
+    var c=c0+dc,r=r0+dr;if(c<0||c>=COLS||r<0||r>=MAXR)continue;
+    if(S.blocks.some(function(o){return o.col===c&&o.row===r}))continue;
+    var dd=Math.abs(dc)+Math.abs(dr);if(dd<bd){bd=dd;best={col:c,row:r}}
+  }
+  return best||{col:c0,row:r0+1};
+}
+function drop(d){
+  var f=findBlock(d.id);if(!f){render();return}
+  var b=f.b,inTray=overTray(d),tg=inTray?null:target(d);
+  if(tg){
+    var occ=S.blocks.filter(function(o){return o.id!==b.id&&o.col===tg.col&&o.row===tg.row})[0];
+    if(S.gravity&&!occ&&S.blocks.filter(function(o){return o.id!==b.id&&o.col===tg.col}).length>=MAXR){render();return}
+    if(f.where==="tray"){
+      f.list.splice(f.list.indexOf(b),1);
+      var cell=occ?nearestFree(tg.col,tg.row):tg;
+      b.col=cell.col;b.row=cell.row;S.blocks.push(b);
+    }else{
+      if(occ){occ.col=b.col;occ.row=b.row}
+      b.col=tg.col;b.row=tg.row;
+    }
+  }else if(inTray&&f.where==="board"){
+    S.blocks.splice(S.blocks.indexOf(b),1);delete b.col;delete b.row;S.tray.push(b);
+  }
+  save();render();
+}
+function up(e){
+  if(!D)return;
+  if(e&&e.type==="pointercancel"&&!D.active){cancelDrag();return}
+  var d=D;clearTimeout(d.timer);clearInterval(d.iv);unlisten();D=null;
+  $("hl").style.display="none";
+  if(d.active)drop(d);
+  else if(Math.abs(d.cx-d.x)+Math.abs(d.cy-d.y)<=8)openEditor(d.id);
+}
+document.addEventListener("touchmove",function(e){if(D&&D.active)e.preventDefault()},{passive:false});
+
+/* block editor (no browser dialogs: delete uses tap-twice) */
+function openEditor(id){
+  var f=findBlock(id);if(!f)return;
+  var b=f.b,c=b.color,armed=false;
+  var ov=document.createElement("div");ov.className="ov";
+  ov.innerHTML='<div class="sheet"><h3>Edit block</h3><input type="text" maxlength="30" autocomplete="off"><div class="sw"></div>'+
+    '<div class="row">'+(f.where==="board"?'<button class="btn" data-a="tray">↑ Send to tray</button>':'')+'<button class="btn danger" data-a="del">Delete</button></div>'+
+    '<div class="row"><button class="btn" data-a="cl">Cancel</button><button class="go" data-a="ok" style="flex:1">Save</button></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector("input");inp.value=b.name;
+  makeSw(ov.querySelector(".sw"),c,function(col){c=col});
+  function close(){ov.remove()}
+  function fin(){save();close();render()}
+  ov.onclick=function(e){if(e.target===ov)close()};
+  [].forEach.call(ov.querySelectorAll("[data-a]"),function(btn){btn.onclick=function(){
+    var a=btn.dataset.a;
+    if(a==="cl"){close();return}
+    if(a==="del"){
+      if(!armed){armed=true;btn.textContent="Tap again to delete";btn.style.background="#e74c3c";btn.style.color="#fff";
+        setTimeout(function(){armed=false;btn.textContent="Delete";btn.style.background="";btn.style.color=""},3000);return}
+      f.list.splice(f.list.indexOf(b),1);fin();return;
+    }
+    var n=inp.value.trim();if(n){b.name=n}b.color=c;
+    if(a==="tray"){S.blocks.splice(S.blocks.indexOf(b),1);delete b.col;delete b.row;S.tray.push(b)}
+    fin();
+  }});
+}
+
+/* forms and buttons */
+makeSw($("sw"),color,function(col){color=col});
+$("f").onsubmit=function(e){
+  e.preventDefault();var n=$("name").value.trim();if(!n)return;
+  S.habits.push({id:Date.now(),name:n,color:color});save();$("name").value="";render();
+};
+$("addb").onclick=function(){
+  var n=$("name").value.trim();if(!n){$("name").focus();return}
+  $("name").value="";addToTray(mk(n,color));
+};
+function applyGravity(){
+  var by={},from={};
+  S.blocks.forEach(function(b){(by[b.col]=by[b.col]||[]).push(b)});
+  Object.keys(by).forEach(function(k){by[k].sort(function(a,b){return a.row-b.row}).forEach(function(b,i){if(b.row!==i){from[b.id]=b.row;b.row=i}})});
+  return from;
+}
+$("gravity").onclick=function(){S.gravity=!S.gravity;save();render()};
+$("top").onclick=function(){var v=$("bv"),mx=-1;S.blocks.forEach(function(b){if(b.row>mx)mx=b.row});v.scrollTo({top:Math.max(0,(R-1-mx)*ch-2*ch),behavior:"smooth"})};
+$("gnd").onclick=function(){var v=$("bv");v.scrollTo({top:v.scrollHeight,behavior:"smooth"})};
+$("exp").onclick=function(){var t=$("bk");t.value=JSON.stringify(S);t.focus();t.select();$("bkmsg").textContent="Copy this text and keep it somewhere safe."};
+$("imp").onclick=function(){
+  try{
+    var o=JSON.parse($("bk").value);
+    if(!o||!Array.isArray(o.blocks)||!Array.isArray(o.habits))throw 0;
+    S=o;S.tray=S.tray||[];if(S.gravity==null)S.gravity=true;
+    S.blocks.forEach(function(b,i){if(!b.id)b.id=uid();if(b.col==null){b.col=Math.floor(COLS/2);b.row=i}});
+    S.tray.forEach(function(b){if(!b.id)b.id=uid()});
+    save();needBottom=true;render();$("bkmsg").textContent="Restored.";
+  }catch(e){$("bkmsg").textContent="That text isn’t a valid backup."}
+};
+window.addEventListener("resize",function(){if(D)return;var v=$("bv"),fb=v.scrollHeight-v.scrollTop;render();v.scrollTop=v.scrollHeight-fb});
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&!D){var o=checkCrumble();if(o)crumbleRun(o)}});
+var old=checkCrumble();
+if(old)crumbleRun(old);else render();
+</script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
+</body>
+</html>
